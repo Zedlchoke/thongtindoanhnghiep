@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    container_name: doanhnghiep_app_local
+    ports:
+      # Mở cửa cho mạng nội bộ: Cổng 5000 của máy chủ map với 5000 của Docker
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      # Đường dẫn cơ sở dữ liệu (SQLite) sẽ trỏ vào thư mục data
+      - DATABASE_URL=sqlite:///app/data/database.sqlite 
+    volumes:
+      # ĐÂY LÀ CHÌA KHÓA: Lưu dữ liệu ra ngoài ổ cứng vật lý của bạn
+      # Nó sẽ tạo thư mục "server_data" và "uploads" trên máy của bạn
+      - ./server_data:/app/data
+      - ./uploads:/app/uploads
+    restart: unless-stopped # Tự động chạy lại ứng dụng nếu máy chủ mất điện hoặc khởi động lại
