@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Crown, Users, Building, Loader2 } from "lucide-react";
+import { ArrowLeft, Crown, Users, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { UserLoginRequest } from "@shared/schema";
 
 interface UnifiedLoginFormProps {
@@ -60,10 +61,10 @@ export function UnifiedLoginForm({ userType, onLogin, onBack }: UnifiedLoginForm
           description: "Đăng nhập với quyền quản trị viên",
           icon: <Crown className="w-8 h-8 text-red-600" />,
           identifierLabel: "Tên đăng nhập",
-          identifierPlaceholder: "",
+          identifierPlaceholder: "Nhập tên đăng nhập (ví dụ: quanadmin)",
           passwordLabel: "Mật khẩu",
           passwordPlaceholder: "Nhập mật khẩu admin",
-          color: "red"
+          color: "red" as const
         };
       case "employee":
         return {
@@ -74,7 +75,7 @@ export function UnifiedLoginForm({ userType, onLogin, onBack }: UnifiedLoginForm
           identifierPlaceholder: "Nhập tên nhân viên",
           passwordLabel: "Mật khẩu",
           passwordPlaceholder: "Liên hệ admin để lấy mật khẩu",
-          color: "green"
+          color: "green" as const
         };
 
       default:
@@ -86,7 +87,7 @@ export function UnifiedLoginForm({ userType, onLogin, onBack }: UnifiedLoginForm
           identifierPlaceholder: "",
           passwordLabel: "Mật khẩu",
           passwordPlaceholder: "",
-          color: "gray"
+          color: "gray" as const
         };
     }
   };
@@ -108,11 +109,11 @@ export function UnifiedLoginForm({ userType, onLogin, onBack }: UnifiedLoginForm
           </Button>
           
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full mx-auto flex items-center justify-center shadow-lg p-2">
-              <img 
-                alt="Royal Việt Nam Logo" 
-                className="w-full h-full object-contain"
-              />
+            <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full mx-auto flex items-center justify-center shadow-lg p-2 border-2 border-blue-200">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">RVN</div>
+                <div className="text-[8px] text-gray-500 -mt-1">ROYAL</div>
+              </div>
             </div>
             <CardTitle className="text-xl">{config.title}</CardTitle>
             <CardDescription>{config.description}</CardDescription>
@@ -155,7 +156,12 @@ export function UnifiedLoginForm({ userType, onLogin, onBack }: UnifiedLoginForm
 
             <Button
               type="submit"
-              className={`w-full bg-${config.color}-600 hover:bg-${config.color}-700`}
+              className={cn(
+                "w-full",
+                config.color === "red" 
+                  ? "bg-red-600 hover:bg-red-700 text-white" 
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              )}
               disabled={isLoading}
             >
               {isLoading ? (
@@ -169,7 +175,11 @@ export function UnifiedLoginForm({ userType, onLogin, onBack }: UnifiedLoginForm
             </Button>
           </form>
 
-
+          <div className="mt-4 text-center text-xs text-gray-500">
+            {userType === "admin" 
+              ? "Mật khẩu mặc định: 01020811 (tài khoản: quanadmin)" 
+              : "Mật khẩu mặc định: royalvietnam (liên hệ admin nếu cần)"}
+          </div>
         </CardContent>
       </Card>
     </div>
