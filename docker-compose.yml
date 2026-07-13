@@ -6,13 +6,14 @@ services:
       - "5001:5000"
     environment:
       - NODE_ENV=production
-      # Kết nối vào máy chủ Database nội bộ thay vì SQLite
       - DATABASE_URL=postgresql://admin:admin123@db:5432/doanhnghiep_db
+      # Add more env if needed for storage or other
     volumes:
       - ./server_data:/app/data
       - ./uploads:/app/uploads
     depends_on:
-      - db # Phải đợi Database chạy lên thì Web mới được chạy
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   db:
@@ -23,6 +24,11 @@ services:
       - POSTGRES_PASSWORD=admin123
       - POSTGRES_DB=doanhnghiep_db
     volumes:
-      # LƯU TRỮ AN TOÀN: Sinh ra thư mục db_data trên máy tính để giữ dữ liệu
       - ./db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d doanhnghiep_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
