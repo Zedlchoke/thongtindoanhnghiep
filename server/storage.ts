@@ -30,8 +30,6 @@ export interface IStorage {
   deleteBusiness(id: number): Promise<boolean>;
   searchBusinesses(search: SearchBusiness): Promise<Business[]>;
   
-
-  
   // Document transaction operations
   createDocumentTransaction(transaction: InsertDocumentTransaction): Promise<DocumentTransaction>;
   getDocumentTransactionsByBusinessId(businessId: number): Promise<DocumentTransaction[]>;
@@ -78,7 +76,6 @@ export class DatabaseStorage implements IStorage {
   async getAllBusinesses(page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc'): Promise<{ businesses: Business[], total: number }> {
     const offset = (page - 1) * limit;
     
-    // Xác định cột sắp xếp
     let orderByColumn;
     switch (sortBy) {
       case 'name':
@@ -202,7 +199,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Document transaction operations
   async createDocumentTransaction(transaction: InsertDocumentTransaction): Promise<DocumentTransaction> {
     const [createdTransaction] = await db
       .insert(documentTransactions)
@@ -217,14 +213,14 @@ export class DatabaseStorage implements IStorage {
       .from(documentTransactions)
       .where(eq(documentTransactions.businessId, businessId))
       .orderBy(documentTransactions.createdAt);
-  }
+    }
 
   async getAllDocumentTransactions(): Promise<DocumentTransaction[]> {
     return await db
       .select()
       .from(documentTransactions)
       .orderBy(documentTransactions.createdAt);
-  }
+    }
 
   async getDocumentTransactionsByCompany(companyName: string): Promise<DocumentTransaction[]> {
     return await db
@@ -234,7 +230,7 @@ export class DatabaseStorage implements IStorage {
         sql`${documentTransactions.deliveryCompany} = ${companyName} OR ${documentTransactions.receivingCompany} = ${companyName}`
       )
       .orderBy(documentTransactions.createdAt);
-  }
+    }
 
   async updateDocumentNumber(id: number, documentNumber: string): Promise<boolean> {
     try {
@@ -266,7 +262,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAllBusinessesForAutocomplete(): Promise<Business[]> {
     return await db.select().from(businesses).orderBy(businesses.name);
-  }
+    }
 
   async deleteDocumentTransaction(id: number): Promise<boolean> {
     const result = await db
@@ -313,10 +309,7 @@ export class DatabaseStorage implements IStorage {
     return transaction || undefined;
   }
 
-
-
   async getDocumentTransactionsByTaxId(taxId: string): Promise<DocumentTransaction[]> {
-    // Lấy business có mã số thuế này
     const [business] = await db
       .select()
       .from(businesses)
@@ -326,7 +319,6 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
 
-    // Lấy tất cả giao dịch có liên quan đến công ty này (deliveryCompany hoặc receivingCompany)
     return await db
       .select()
       .from(documentTransactions)
@@ -334,9 +326,8 @@ export class DatabaseStorage implements IStorage {
         sql`${documentTransactions.deliveryCompany} = ${business.name} OR ${documentTransactions.receivingCompany} = ${business.name}`
       )
       .orderBy(documentTransactions.createdAt);
-  }
+    }
 
-  // Admin operations
   async createAdminUser(user: InsertAdminUser): Promise<AdminUser> {
     const [createdUser] = await db
       .insert(adminUsers)
@@ -384,11 +375,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async initializeDatabase(): Promise<void> {
-    // First, try to create tables if they don't exist using raw SQL
     try {
       const client = await pool.connect();
       
-      // Create admin_users table
+      // 1. admin_users
       await client.query(`
         CREATE TABLE IF NOT EXISTS admin_users (
           id SERIAL PRIMARY KEY,
@@ -398,66 +388,161 @@ export class DatabaseStorage implements IStorage {
         );
       `);
 
-      // Create businesses table  
+      // 2. businesses - FULL schema
       await client.query(`
         CREATE TABLE IF NOT EXISTS businesses (
           id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          tax_id VARCHAR(100) UNIQUE,
+          name TEXT NOT NULL,
+          tax_id VARCHAR(20) UNIQUE,
           address TEXT,
-          phone VARCHAR(50),
-          email VARCHAR(255),
-          website VARCHAR(255),
-          industry VARCHAR(255),
-          contact_person VARCHAR(255),
-          account VARCHAR(255),
-          password VARCHAR(255),
-          bank_account VARCHAR(255),
-          bank_name VARCHAR(255),
+          phone VARCHAR(20),
+          email TEXT,
+          website TEXT,
+          industry TEXT,
+          contact_person TEXT,
+          establishment_date TEXT,
+          charter_capital TEXT,
+          audit_website TEXT,
+          account TEXT,
+          password TEXT,
+          bank_account TEXT,
+          bank_name TEXT,
+          tax_account_id TEXT,
+          tax_account_pass TEXT,
+          invoice_lookup_id TEXT,
+          invoice_lookup_pass TEXT,
+          web_invoice_website TEXT,
+          web_invoice_id TEXT,
+          web_invoice_pass TEXT,
+          social_insurance_code TEXT,
+          social_insurance_id TEXT,
+          social_insurance_main_pass TEXT,
+          social_insurance_secondary_pass TEXT,
+          token_id TEXT,
+          token_pass TEXT,
+          token_provider TEXT,
+          token_registration_date TEXT,
+          token_expiration_date TEXT,
+          token_management_location TEXT,
+          statistics_id TEXT,
+          statistics_pass TEXT,
+          audit_software_website TEXT,
+          audit_software_id TEXT,
+          audit_software_pass TEXT,
           custom_fields JSONB DEFAULT '{}',
           notes TEXT,
-          access_code VARCHAR(255),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          access_code TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
       `);
 
-      // Create document_transactions table
+      // 3. document_transactions - FULL
       await client.query(`
         CREATE TABLE IF NOT EXISTS document_transactions (
           id SERIAL PRIMARY KEY,
           business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
-          document_type VARCHAR(255) NOT NULL,
-          transaction_type VARCHAR(50) NOT NULL,
-          handled_by VARCHAR(255) NOT NULL,
-          transaction_date TIMESTAMP NOT NULL,
+          document_number TEXT,
+          document_type TEXT NOT NULL,
+          document_details JSONB DEFAULT '{}' NOT NULL,
+          delivery_company TEXT NOT NULL,
+          receiving_company TEXT NOT NULL,
+          delivery_person TEXT,
+          receiving_person TEXT,
+          delivery_date TEXT NOT NULL,
+          receiving_date TEXT,
+          handled_by TEXT NOT NULL,
           notes TEXT,
-          signed_file_path VARCHAR(500),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          status TEXT DEFAULT 'pending',
+          signed_file_path TEXT,
+          pdf_file_path TEXT,
+          pdf_file_name TEXT,
+          is_hidden BOOLEAN DEFAULT false,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
       `);
 
+      // 4. business_accounts - FULL (quan trọng)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS business_accounts (
+          id SERIAL PRIMARY KEY,
+          business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          invoice_lookup_id TEXT,
+          invoice_lookup_pass TEXT,
+          web_invoice_website TEXT,
+          web_invoice_id TEXT,
+          web_invoice_pass TEXT,
+          social_insurance_code TEXT,
+          social_insurance_id TEXT,
+          social_insurance_main_pass TEXT,
+          social_insurance_secondary_pass TEXT,
+          social_insurance_contact TEXT,
+          statistics_id TEXT,
+          statistics_pass TEXT,
+          token_id TEXT,
+          token_pass TEXT,
+          token_provider TEXT,
+          token_registration_date TEXT,
+          token_expiration_date TEXT,
+          tax_account_id TEXT,
+          tax_account_pass TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        );
+      `);
+
+      // 5. Thêm cột thiếu cho bảng cũ (an toàn với data cũ)
+      const businessNewColumns = [
+        'establishment_date TEXT', 'charter_capital TEXT', 'audit_website TEXT',
+        'tax_account_id TEXT', 'tax_account_pass TEXT',
+        'invoice_lookup_id TEXT', 'invoice_lookup_pass TEXT',
+        'web_invoice_website TEXT', 'web_invoice_id TEXT', 'web_invoice_pass TEXT',
+        'social_insurance_code TEXT', 'social_insurance_id TEXT',
+        'social_insurance_main_pass TEXT', 'social_insurance_secondary_pass TEXT',
+        'token_id TEXT', 'token_pass TEXT', 'token_provider TEXT',
+        'token_registration_date TEXT', 'token_expiration_date TEXT', 'token_management_location TEXT',
+        'statistics_id TEXT', 'statistics_pass TEXT',
+        'audit_software_website TEXT', 'audit_software_id TEXT', 'audit_software_pass TEXT'
+      ];
+      for (const col of businessNewColumns) {
+        await client.query(`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS ${col};`);
+      }
+
+      const docNewColumns = [
+        'document_number TEXT',
+        'document_details JSONB DEFAULT \'{}\'',
+        'delivery_company TEXT', 'receiving_company TEXT',
+        'delivery_person TEXT', 'receiving_person TEXT',
+        'delivery_date TEXT', 'receiving_date TEXT',
+        'status TEXT DEFAULT \'pending\'',
+        'pdf_file_path TEXT', 'pdf_file_name TEXT',
+        'is_hidden BOOLEAN DEFAULT false'
+      ];
+      for (const col of docNewColumns) {
+        await client.query(`ALTER TABLE document_transactions ADD COLUMN IF NOT EXISTS ${col};`);
+      }
+
       client.release();
-      console.log("Database tables created successfully");
+      console.log("✅ Database tables & columns synchronized successfully");
     } catch (error) {
-      console.error("Error creating tables:", error);
+      console.error("Error synchronizing database schema:", error);
     }
 
-    // Create admin user if not exists  
+    // Tạo admin an toàn (không bị duplicate error)
     try {
-      await this.createAdminUser({
-        username: "quanadmin",
-        password: "01020811"
-      });
-      console.log("Admin user created successfully");
-    } catch (error) {
-      // Admin user might already exist, that's okay
-      console.log("Admin user already exists or creation failed:", error);
+      const client = await pool.connect();
+      await client.query(`
+        INSERT INTO admin_users (username, password)
+        VALUES ('quanadmin', '01020811')
+        ON CONFLICT (username) DO NOTHING;
+      `);
+      client.release();
+      console.log("✅ Admin user 'quanadmin' ensured safely");
+    } catch (err) {
+      console.log("Admin user check:", err);
     }
-    
-    console.log("Database initialization completed");
+
+    console.log("✅ Database initialization completed");
   }
 
-  // New authentication methods
   async authenticateUser(login: UserLoginRequest): Promise<{ userType: string; userData: any } | null> {
     const { userType, identifier, password } = login;
 
@@ -470,7 +555,6 @@ export class DatabaseStorage implements IStorage {
         break;
 
       case "employee":
-        // Employee authentication với mật khẩu cố định
         if (password === "royalvietnam") {
           return { 
             userType: "employee", 
@@ -508,7 +592,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Business Account methods implementation
   async getBusinessAccount(businessId: number): Promise<BusinessAccount | null> {
     try {
       const [account] = await db
@@ -538,14 +621,11 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     if (!updatedAccount) {
-      // If no record exists, create one
       return this.createBusinessAccount({ ...account, businessId } as InsertBusinessAccount);
     }
     
     return updatedAccount;
   }
-
-
 }
 
 export const storage = new DatabaseStorage();
