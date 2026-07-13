@@ -70,7 +70,10 @@ export function UserTypeSelector({ onSelectUserType }: UserTypeSelectorProps) {
                 <li>• Thiết lập mã truy cập</li>
                 <li>• Quản lý hồ sơ</li>
               </ul>
-              <Button className="w-full mt-4 bg-red-600 hover:bg-red-700">
+              <Button 
+                className="w-full mt-4 bg-red-600 hover:bg-red-700"
+                onClick={(e) => { e.stopPropagation(); onSelectUserType("admin"); }}
+              >
                 Đăng nhập Admin
               </Button>
             </CardContent>
@@ -101,7 +104,10 @@ export function UserTypeSelector({ onSelectUserType }: UserTypeSelectorProps) {
                 <li>• Không thể xóa/sửa</li>
                 <li>• Liên hệ admin để lấy mật khẩu</li>
               </ul>
-              <Button className="w-full mt-4 bg-green-600 hover:bg-green-700">
+              <Button 
+                className="w-full mt-4 bg-green-600 hover:bg-green-700"
+                onClick={(e) => { e.stopPropagation(); onSelectUserType("employee"); }}
+              >
                 Đăng nhập Nhân viên
               </Button>
             </CardContent>
