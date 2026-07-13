@@ -1,19 +1,28 @@
-version: '3.8'
-
 services:
   webapp:
     build: .
     container_name: doanhnghiep_app_local
     ports:
-      # Mở cửa cho mạng nội bộ: Cổng 5000 của máy chủ map với 5000 của Docker
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - NODE_ENV=production
-      # Đường dẫn cơ sở dữ liệu (SQLite) sẽ trỏ vào thư mục data
-      - DATABASE_URL=sqlite:///app/data/database.sqlite 
+      # Kết nối vào máy chủ Database nội bộ thay vì SQLite
+      - DATABASE_URL=postgresql://admin:admin123@db:5432/doanhnghiep_db
     volumes:
-      # ĐÂY LÀ CHÌA KHÓA: Lưu dữ liệu ra ngoài ổ cứng vật lý của bạn
-      # Nó sẽ tạo thư mục "server_data" và "uploads" trên máy của bạn
       - ./server_data:/app/data
       - ./uploads:/app/uploads
-    restart: unless-stopped # Tự động chạy lại ứng dụng nếu máy chủ mất điện hoặc khởi động lại
+    depends_on:
+      - db # Phải đợi Database chạy lên thì Web mới được chạy
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: doanhnghiep_db_local
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DB=doanhnghiep_db
+    volumes:
+      # LƯU TRỮ AN TOÀN: Sinh ra thư mục db_data trên máy tính để giữ dữ liệu
+      - ./db_data:/var/lib/postgresql/data
+    restart: unless-stopped

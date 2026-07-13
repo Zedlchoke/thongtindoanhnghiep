@@ -17,7 +17,7 @@ import {
   type LoginRequest,
   type UserLoginRequest,
   type ChangePasswordRequest
-} from "@shared/schema";
+} from "../shared/schema";
 import { db, pool } from "./db";
 import { eq, like, sql } from "drizzle-orm";
 

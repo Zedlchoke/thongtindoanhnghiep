@@ -14,7 +14,7 @@ import {
   loginSchema,
   userLoginSchema,
   changePasswordSchema
-} from "@shared/schema";
+} from "../shared/schema";
 import { z } from "zod";
 import { 
   ObjectStorageService,
