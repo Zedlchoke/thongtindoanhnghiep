@@ -14,11 +14,11 @@ export function UserTypeSelector({ onSelectUserType }: UserTypeSelectorProps) {
       <div className="w-full max-w-4xl space-y-8">
         {/* Logo và Header */}
         <div className="text-center space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg p-2">
-            <img 
-              alt="Royal Việt Nam Logo" 
-              className="w-full h-full object-contain"
-            />
+          <div className="bg-white dark:bg-gray-800 rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg p-2 border-2 border-blue-200">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">RVN</div>
+              <div className="text-[8px] text-gray-500 -mt-1">ROYAL</div>
+            </div>
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -36,7 +36,7 @@ export function UserTypeSelector({ onSelectUserType }: UserTypeSelectorProps) {
         {/* Banner quảng cáo */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-center text-white shadow-lg">
           <h3 className="text-xl font-semibold mb-2">
-            🌟 Dịch vụ tư vấn doanh nghiệp chuyên nghiệp 🌟
+            ⭐ Dịch vụ tư vấn doanh nghiệp chuyên nghiệp ⭐
           </h3>
           <p className="text-sm opacity-90">
             Hỗ trợ thành lập, quản lý và phát triển doanh nghiệp một cách hiệu quả
